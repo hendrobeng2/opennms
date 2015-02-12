@@ -2,8 +2,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2002-2014 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2002-2015 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2015 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -44,6 +44,7 @@
         java.sql.SQLException,
         org.opennms.core.soa.ServiceRegistry,
         org.opennms.core.utils.InetAddressUtils,
+        org.opennms.core.utils.WebSecurityUtils,
         org.opennms.netmgt.config.PollOutagesConfigFactory,
         org.opennms.netmgt.config.poller.outages.Outage,
         org.opennms.netmgt.model.OnmsNode,
@@ -167,7 +168,7 @@
     Asset asset = m_model.getAsset(nodeId);
     nodeModel.put("asset", asset);
     if (asset != null && asset.getBuilding() != null && asset.getBuilding().length() > 0) {
-        nodeModel.put("statusSite", asset.getBuilding());
+        nodeModel.put("statusSite", WebSecurityUtils.sanitizeString(asset.getBuilding(),true));
     }
     
     nodeModel.put("lldp",    EnLinkdElementFactory.getInstance(getServletContext()).getLldpElement(nodeId));
@@ -223,6 +224,10 @@
     nodeModel.put("showRancid","true".equalsIgnoreCase(Vault.getProperty("opennms.rancidIntegrationEnabled")));
     
     nodeModel.put("node", node_db);
+    nodeModel.put("sysName", WebSecurityUtils.sanitizeString(node_db.getSysName()));
+    nodeModel.put("sysLocation", WebSecurityUtils.sanitizeString(node_db.getSysLocation()));
+    nodeModel.put("sysContact", WebSecurityUtils.sanitizeString(node_db.getSysContact(), true));
+    nodeModel.put("sysDescription", WebSecurityUtils.sanitizeString(node_db.getSysDescription()));
     
     if(!(node_db.getForeignSource() == null) && !(node_db.getForeignId() == null)) {
         nodeModel.put("parentRes", node_db.getForeignSource() + ":" + node_db.getForeignId());
@@ -308,12 +313,11 @@ function confirmAssetEdit() {
 </script>
 
 <h4>
-  Node: <strong>${model.label}</strong> (ID: <strong>${model.id}</strong>)<br>
   <c:if test="${model.foreignSource != null}">
-    <em>Created via provisioning requisition <strong>${model.foreignSource}</strong> (foreignId: <strong>${model.foreignId}</strong>)</em><br>
+    <div class="NPnode">Node: <strong>${model.label}</strong>&nbsp;&nbsp;&nbsp;<span class="NPdbid label label-default" title="Database ID: ${model.id}"><span class="glyphicon glyphicon-hdd"></span>&nbsp;${model.id}</span>&nbsp;<span class="NPfs label label-default" title="Requisition: ${model.foreignSource}"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;${model.foreignSource}</span>&nbsp;<span class="NPfid label label-default" title="Foreign ID: ${model.foreignId}"><span class="glyphicon glyphicon-qrcode"></span>&nbsp;${model.foreignId}</span></div>
   </c:if>
   <c:if test="${model.foreignSource == null}">
-    <em>Not a member of any provisioning requisition</em>
+    <div class="NPnode">Node: <strong>${model.label}</strong>&nbsp;&nbsp;&nbsp;<span class="NPdbid label label-default" title="Database ID: ${model.id}"><span class="glyphicon glyphicon-hdd"></span>&nbsp;${model.id}</span></div>
   </c:if>
 </h4>
 
@@ -479,7 +483,7 @@ function confirmAssetEdit() {
     <table class="table table-condensed">
       <tr>
         <th>Name</th>
-        <td>${model.node.sysName}</td>
+        <td>${model.sysName}</td>
       </tr>
       <tr>
         <th>sysObjectID</th>
@@ -487,15 +491,15 @@ function confirmAssetEdit() {
       </tr>
       <tr>
         <th>Location</th>
-        <td>${model.node.sysLocation}</td>
+        <td>${model.sysLocation}</td>
       </tr>
       <tr>
         <th>Contact</th>
-        <td>${model.node.sysContact}</td>
+        <td>${model.sysContact}</td>
       </tr>
       <tr>
         <th valign="top">Description</th>
-        <td valign="top">${model.node.sysDescription}</td>
+        <td valign="top">${model.sysDescription}</td>
       </tr>
     </table>
     </div>

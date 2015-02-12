@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms</groupId>
   <artifactId>opennms</artifactId>
-  <version>15.0.0-SNAPSHOT</version>
+  <version>16.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>OpenNMS</name>
   <url>http://opennms.org/</url>
@@ -1038,7 +1038,7 @@
     <install.version>${project.version}</install.version>
     <display.version>${install.version}</display.version>
     <opennms.home>${dist.dir}/${dist.name}</opennms.home>
-    <opennms.osgi.version>15.0.0.SNAPSHOT</opennms.osgi.version>
+    <opennms.osgi.version>16.0.0.SNAPSHOT</opennms.osgi.version>
     <maven.metadata.legacy>true</maven.metadata.legacy>
     <root.dir>${project.basedir}</root.dir>
     <dist.dir>${root.dir}/target</dist.dir>
@@ -1141,6 +1141,7 @@
     <osgiVersion>4.3.1</osgiVersion>
     <osgiEnterpriseVersion>4.2.0</osgiEnterpriseVersion>
     <slf4jVersion>1.7.7</slf4jVersion>
+    <smackVersion>4.0.6</smackVersion>
     <springJaxbVersion>2.1.7</springJaxbVersion>
     <xalanVersion>2.7.2</xalanVersion>
     <xercesVersion>2.9.1</xercesVersion>
@@ -2394,6 +2395,12 @@
       </dependency>
       <dependency>
         <groupId>org.opennms.dependencies</groupId>
+        <artifactId>smack-dependencies</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.opennms.dependencies</groupId>
         <artifactId>rancid-dependencies</artifactId>
         <version>${project.version}</version>
         <type>pom</type>
@@ -3130,16 +3137,6 @@
           <groupId>commons-logging</groupId>
         </exclusion>
       </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>jivesoftware</groupId>
-        <artifactId>smack</artifactId>
-        <version>3.0.4</version>
-      </dependency>
-      <dependency>
-        <groupId>jivesoftware</groupId>
-        <artifactId>smackx</artifactId>
-        <version>3.0.4</version>
       </dependency>
       <dependency>
         <groupId>joda-time</groupId>
