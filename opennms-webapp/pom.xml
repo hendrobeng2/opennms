@@ -707,6 +707,11 @@
       <artifactId>freemarker</artifactId>
       <version>${freemarkerVersion}</version>
     </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-rrd-model</artifactId>
+      <scope>${onmsLibScope}</scope>
+    </dependency>
 
     <!-- CORS support -->
     <dependency>

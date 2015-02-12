@@ -1,23 +1,30 @@
 package org.opennms.web.rest.rrd.fetch;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.sax.SAXSource;
+
 import org.jrobin.core.RrdException;
 import org.opennms.core.utils.StringUtils;
 import org.opennms.netmgt.dao.api.ResourceDao;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.RrdGraphAttribute;
+import org.opennms.netmgt.rrd.model.RrdXport;
+import org.opennms.netmgt.rrd.model.XRow;
 import org.opennms.web.rest.rrd.QueryRequest;
 import org.opennms.web.rest.rrd.QueryRequest.Source;
-import org.springframework.util.FileCopyUtils;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import com.google.common.collect.Maps;
 
 public class JniRrdFetchStrategy implements RrdFetchStrategy {
 	private final ResourceDao m_resourceDao;
@@ -73,41 +80,31 @@ public class JniRrdFetchStrategy implements RrdFetchStrategy {
 
         String[] commandArray = StringUtils.createCommandArray(command.toString(), '@');
 
-        /**
-         * TODO: create class for the Xml unmarshalling...
-        Object data = null;
-        */
-
+        // TODO: Make sure streams get closed
+        // TODO: Use commons-exec
+        RrdXport rrdXport;
         try {
+            XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+            xmlReader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             Process process = Runtime.getRuntime().exec(commandArray);
-            byte[] byteArray = FileCopyUtils.copyToByteArray(process.getInputStream());
-            String errors = FileCopyUtils.copyToString(new InputStreamReader(process.getErrorStream()));
-
-            if (errors.length() > 0) {
-                return null;
-            }
-
-            BufferedReader reader = null;
-
-            try {
-                InputStream is = new ByteArrayInputStream(byteArray);
-                reader = new BufferedReader(new InputStreamReader(is));
-                /**
-                 * TODO: ...and use the class here
-                data = (Object) Unmarshaller.unmarshal(Object.class, reader);
-                */
-            } finally {
-                reader.close();
-            }
+            SAXSource source = new SAXSource(xmlReader, new InputSource(new InputStreamReader(process.getInputStream())));
+            JAXBContext jc = JAXBContext.newInstance(RrdXport.class);
+            Unmarshaller u = jc.createUnmarshaller();
+            rrdXport = (RrdXport) u.unmarshal(source);
         } catch (Exception e) {
-            throw new RrdException("exportRrd: can't execute command '" + command + ": ", e);
+            throw new RrdException("Can't parse RRD export", e);
         }
 
         SortedMap<Long, Map<String, Double>> results = new TreeMap<Long, Map<String, Double>>();
+        for (XRow row : rrdXport.getRows()) {
+            Map<String, Double> values = Maps.newHashMap();
+            int k = 0;
+            for (String column : rrdXport.getMeta().getLegends()) {
+                values.put(column, row.getValues().get(k++));
+            }
+            results.put(row.getTimestamp(), values);
+        }
 
-        /**
-         * TODO: construct the response object out of the unmarshalled xml data
-         */
         return results;
 	}
 }
